@@ -68,9 +68,16 @@ You can then use the notification functionality in Cline with:
 
 ## How It Works
 
-The MCP server implements the Model Context Protocol, allowing LLMs to interact with external systems. The notification server sends notifications to Windows systems using PowerShell.
+The MCP server implements the Model Context Protocol, allowing LLMs to interact with external systems. The notification server sends notifications to Windows systems using the win10toast library.
 
 On non-Windows systems, the notification server will print the notification details to the console instead.
+
+## Dependencies
+
+This project requires the following dependencies:
+- mcp>=1.1.3: The Model Context Protocol SDK
+- win10toast>=0.9.0: For Windows notifications
+- Other dependencies listed in requirements.txt
 
 ## Development
 
