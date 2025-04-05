@@ -51,14 +51,42 @@ To use this MCP server with Cline, create a `cline_mcp_settings.json` file in yo
 {
   "mcpServers": {
     "notify-mcp": {
-      "command": "python -m mcp_server_notify",
-      "cwd": "/path/to/notify-mcp"
+      "command": "python",
+      "args": [
+        "-m",
+        "mcp_server_notify"
+      ],
+      "env": {
+        "PYTHONPATH": "E:\\path\\to\\notify-mcp"
+      },
+      "disabled": false
     }
   }
 }
 ```
 
-Replace `/path/to/notify-mcp` with the actual path to your cloned repository.
+For Windows users, use the following format with absolute paths:
+
+```json
+{
+  "mcpServers": {
+    "notify-mcp": {
+      "command": "C:\\Users\\username\\AppData\\Local\\Programs\\Python\\Python312\\python.exe",
+      "args": [
+        "E:\\path\\to\\notify-mcp\\cline_server.py"
+      ],
+      "disabled": false
+    }
+  }
+}
+```
+
+Important notes:
+1. Replace `C:\\Users\\username\\AppData\\Local\\Programs\\Python\\Python312\\python.exe` with the absolute path to your Python executable
+2. Replace `E:\\path\\to\\notify-mcp` with the absolute path to your cloned repository
+3. Use double backslashes (`\\`) in Windows paths
+4. The `disabled` field should be set to `false`
+5. Note that `command` and `args` are separate fields, not combined into one string
 
 You can then use the notification functionality in Cline with:
 
