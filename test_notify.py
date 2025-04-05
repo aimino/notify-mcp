@@ -1,15 +1,13 @@
 import asyncio
 import sys
 import platform
-from mcp.client import Client
+from mcp.client.stdio import stdio_client
 
 async def main():
     """Test the Windows notification MCP server."""
     print("Testing Windows Notification MCP Server")
     
-    client = Client()
-    
-    process = await client.connect_process(["python", "-m", "mcp_server_notify"])
+    client = await stdio_client(["python", "-m", "mcp_server_notify"])
     
     try:
         tools = await client.get_tools()
