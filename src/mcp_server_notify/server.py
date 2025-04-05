@@ -41,30 +41,33 @@ def send_windows_notification(title: str, message: str, urgency: str = "normal")
     
     try:
         powershell_script = f"""
-        [Windows.UI.Notifications.ToastNotificationManager, Windows.UI.Notifications, ContentType = WindowsRuntime] | Out-Null
-        [Windows.UI.Notifications.ToastNotification, Windows.UI.Notifications, ContentType = WindowsRuntime] | Out-Null
-        [Windows.Data.Xml.Dom.XmlDocument, Windows.Data.Xml.Dom.XmlDocument, ContentType = WindowsRuntime] | Out-Null
-
-        $APP_ID = 'MCP Notification'
-
-        $template = @"
-        <toast>
-            <visual>
-                <binding template="ToastGeneric">
-                    <text>{title}</text>
-                    <text>{message}</text>
-                </binding>
-            </visual>
-        </toast>
-        "@
-
-        $xml = New-Object Windows.Data.Xml.Dom.XmlDocument
-        $xml.LoadXml($template)
-        $toast = New-Object Windows.UI.Notifications.ToastNotification $xml
-        [Windows.UI.Notifications.ToastNotificationManager]::CreateToastNotifier($APP_ID).Show($toast)
+        if (Get-Module -ListAvailable -Name BurntToast) {{
+            Import-Module BurntToast
+            New-BurntToastNotification -Text "{title}", "{message}" -Silent
+            exit 0
+        }}
+        
+        Add-Type -AssemblyName System.Windows.Forms
+        Add-Type -AssemblyName System.Drawing
+        
+        $notify = New-Object System.Windows.Forms.NotifyIcon
+        $notify.Icon = [System.Drawing.SystemIcons]::Information
+        $notify.BalloonTipIcon = [System.Windows.Forms.ToolTipIcon]::Info
+        $notify.BalloonTipTitle = "{title}"
+        $notify.BalloonTipText = "{message}"
+        $notify.Visible = $true
+        
+        $notify.ShowBalloonTip(5000)
+        Start-Sleep -Seconds 1
+        $notify.Dispose()
+        
+        if ($LASTEXITCODE -ne 0) {{
+            Add-Type -AssemblyName PresentationFramework
+            [System.Windows.MessageBox]::Show("{message}", "{title}")
+        }}
         """
         
-        subprocess.run(["powershell", "-Command", powershell_script], check=True)
+        subprocess.run(["powershell", "-ExecutionPolicy", "Bypass", "-Command", powershell_script], check=True)
         return True
     except Exception as e:
         print(f"Error sending Windows notification: {str(e)}")
