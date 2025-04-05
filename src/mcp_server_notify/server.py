@@ -168,7 +168,12 @@ Notification sent successfully:
 
 def main():
     """Run the notification MCP server."""
-    stdio_server(NotifyServer())
+    print("Starting MCP Notification Server...")
+    print(f"Platform: {platform.system()}")
+    print("Initializing server...")
+    server = NotifyServer()
+    print("Server initialized, starting stdio server...")
+    stdio_server(server)
 
 if __name__ == "__main__":
     main()
