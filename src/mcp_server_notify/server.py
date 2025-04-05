@@ -173,7 +173,18 @@ def main():
     print("Initializing server...")
     server = NotifyServer()
     print("Server initialized, starting stdio server...")
-    stdio_server(server)
+    try:
+        stdio_server(server)
+    except Exception as e:
+        print(f"Error in stdio_server: {str(e)}")
+        import traceback
+        traceback.print_exc()
+        print("Server encountered an error. Press Ctrl+C to exit.")
+        while True:
+            try:
+                time.sleep(10)
+            except KeyboardInterrupt:
+                break
 
 if __name__ == "__main__":
     main()
