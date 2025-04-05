@@ -2,7 +2,7 @@ from typing import Annotated, Tuple
 import platform
 import subprocess
 import os
-import ctypes
+import time
 from mcp.shared.exceptions import McpError
 from mcp.server import Server
 from mcp.server.stdio import stdio_server
@@ -42,22 +42,25 @@ def send_windows_notification(title: str, message: str, urgency: str = "normal")
         return True
     
     try:
-        MB_ICONINFORMATION = 0x00000040
-        MB_ICONWARNING = 0x00000030
-        MB_ICONERROR = 0x00000010
+        from win10toast import ToastNotifier
         
-        icon_type = MB_ICONINFORMATION  # Default
-        if urgency == "high":
-            icon_type = MB_ICONWARNING
-        elif urgency == "critical":
-            icon_type = MB_ICONERROR
-            
-        result = ctypes.windll.user32.MessageBoxW(
-            0,  # hWnd
-            message,  # text
-            title,  # caption
-            icon_type  # type
+        toaster = ToastNotifier()
+        
+        duration = 5  # Default duration in seconds
+        if urgency == "low":
+            duration = 3
+        elif urgency == "high":
+            duration = 10
+        
+        toaster.show_toast(
+            title=title,
+            msg=message,
+            duration=duration,
+            threaded=True  # Run in a separate thread so it doesn't block
         )
+        
+        time.sleep(0.5)
+        
         return True
     except Exception as e:
         print(f"Error sending Windows notification: {str(e)}")
