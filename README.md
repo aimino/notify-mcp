@@ -43,6 +43,31 @@ A test script is provided to verify the functionality of the MCP server:
 python test_notify.py
 ```
 
+## Cline Integration
+
+To use this MCP server with Cline, create a `cline_mcp_settings.json` file in your Cline configuration directory:
+
+```json
+{
+  "servers": [
+    {
+      "name": "notify",
+      "command": ["python", "-m", "mcp_server_notify"],
+      "working_directory": "/path/to/notify-mcp",
+      "enabled": true
+    }
+  ]
+}
+```
+
+Replace `/path/to/notify-mcp` with the actual path to your cloned repository.
+
+You can then use the notification functionality in Cline with:
+
+```
+/notify title="Alert" message="This is an important notification" urgency="high"
+```
+
 ## How It Works
 
 The MCP server implements the Model Context Protocol, allowing LLMs to interact with external systems. The notification server sends notifications to Windows systems using PowerShell.
