@@ -1,6 +1,8 @@
 from typing import Annotated, Tuple
 import platform
 import subprocess
+import os
+import ctypes
 from mcp.shared.exceptions import McpError
 from mcp.server import Server
 from mcp.server.stdio import stdio_server
@@ -16,12 +18,6 @@ from mcp.types import (
     INTERNAL_ERROR,
 )
 from pydantic import BaseModel, Field
-
-try:
-    from win10toast import ToastNotifier
-    HAS_WIN10TOAST = True
-except ImportError:
-    HAS_WIN10TOAST = False
 
 class NotificationRequest(BaseModel):
     title: str = Field(..., description="Title of the notification")
@@ -45,34 +41,30 @@ def send_windows_notification(title: str, message: str, urgency: str = "normal")
         print(f"Message: {message}")
         return True
     
-    if HAS_WIN10TOAST:
-        try:
-            toaster = ToastNotifier()
-            duration = 5  # default duration
-            if urgency == "low":
-                duration = 3
-            elif urgency == "high":
-                duration = 10
-                
-            toaster.show_toast(
-                title=title,
-                msg=message,
-                duration=duration,
-                threaded=True
-            )
-            return True
-        except Exception as e:
-            print(f"Error sending Windows notification with win10toast: {str(e)}")
-            print(f"NOTIFICATION [{urgency.upper()}]:")
-            print(f"Title: {title}")
-            print(f"Message: {message}")
-            return False
-    else:
-        print("win10toast not available, falling back to console output")
+    try:
+        MB_ICONINFORMATION = 0x00000040
+        MB_ICONWARNING = 0x00000030
+        MB_ICONERROR = 0x00000010
+        
+        icon_type = MB_ICONINFORMATION  # Default
+        if urgency == "high":
+            icon_type = MB_ICONWARNING
+        elif urgency == "critical":
+            icon_type = MB_ICONERROR
+            
+        result = ctypes.windll.user32.MessageBoxW(
+            0,  # hWnd
+            message,  # text
+            title,  # caption
+            icon_type  # type
+        )
+        return True
+    except Exception as e:
+        print(f"Error sending Windows notification: {str(e)}")
         print(f"NOTIFICATION [{urgency.upper()}]:")
         print(f"Title: {title}")
         print(f"Message: {message}")
-        return True
+        return False
 
 class NotifyServer(Server):
     """MCP server that provides Windows notifications."""
