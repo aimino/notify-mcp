@@ -17,6 +17,12 @@ from mcp.types import (
 )
 from pydantic import BaseModel, Field
 
+try:
+    from win10toast import ToastNotifier
+    HAS_WIN10TOAST = True
+except ImportError:
+    HAS_WIN10TOAST = False
+
 class NotificationRequest(BaseModel):
     title: str = Field(..., description="Title of the notification")
     message: str = Field(..., description="Content of the notification")
@@ -39,27 +45,34 @@ def send_windows_notification(title: str, message: str, urgency: str = "normal")
         print(f"Message: {message}")
         return True
     
-    try:
-        title_escaped = title.replace("'", "''")
-        message_escaped = message.replace("'", "''")
-        
-        ps_script = f"Add-Type -AssemblyName PresentationFramework; [System.Windows.MessageBox]::Show('{message_escaped}', '{title_escaped}')"
-        
-        result = subprocess.run(
-            ["powershell", "-Command", ps_script],
-            capture_output=True,
-            text=True,
-            check=False
-        )
-        
-        if result.returncode != 0:
-            print(f"PowerShell error: {result.stderr}")
+    if HAS_WIN10TOAST:
+        try:
+            toaster = ToastNotifier()
+            duration = 5  # default duration
+            if urgency == "low":
+                duration = 3
+            elif urgency == "high":
+                duration = 10
+                
+            toaster.show_toast(
+                title=title,
+                msg=message,
+                duration=duration,
+                threaded=True
+            )
+            return True
+        except Exception as e:
+            print(f"Error sending Windows notification with win10toast: {str(e)}")
+            print(f"NOTIFICATION [{urgency.upper()}]:")
+            print(f"Title: {title}")
+            print(f"Message: {message}")
             return False
-            
+    else:
+        print("win10toast not available, falling back to console output")
+        print(f"NOTIFICATION [{urgency.upper()}]:")
+        print(f"Title: {title}")
+        print(f"Message: {message}")
         return True
-    except Exception as e:
-        print(f"Error sending Windows notification: {str(e)}")
-        return False
 
 class NotifyServer(Server):
     """MCP server that provides Windows notifications."""
