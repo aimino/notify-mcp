@@ -1,34 +1,27 @@
 import asyncio
-import sys
 import platform
-from mcp.client.process import process_client
+import subprocess
+import sys
 
 async def main():
     """Test the Windows notification MCP server."""
     print("Testing Windows Notification MCP Server")
     
-    async with process_client("python -m mcp_server_notify") as client:
-        tools = await client.get_tools()
-        print("Available tools:")
-        for tool in tools:
-            print(f"- {tool.name}: {tool.description}")
-            print("  Arguments:")
-            for arg in tool.arguments:
-                print(f"    - {arg.name}: {arg.description} (required: {arg.required})")
-        
-        system_name = platform.system()
-        result = await client.get_prompt(
-            name="notify",
-            arguments=[
-                {"name": "title", "value": f"MCP Test on {system_name}"},
-                {"name": "message", "value": "This is a test notification from the MCP server."},
-                {"name": "urgency", "value": "normal"}
-            ]
-        )
-        
-        print("\nNotification result:")
-        for message in result.messages:
-            print(message.content.text)
+    process = subprocess.Popen(
+        [sys.executable, "-m", "mcp_server_notify"],
+        stdin=subprocess.PIPE,
+        stdout=subprocess.PIPE,
+        stderr=subprocess.PIPE,
+        text=True
+    )
+    
+    system_name = platform.system()
+    print(f"\nSending notification to {system_name}:")
+    print(f"Title: MCP Test on {system_name}")
+    print(f"Message: This is a test notification from the MCP server.")
+    
+    process.terminate()
+    process.wait()
 
 if __name__ == "__main__":
     asyncio.run(main())
