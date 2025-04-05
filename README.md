@@ -49,14 +49,13 @@ To use this MCP server with Cline, create a `cline_mcp_settings.json` file in yo
 
 ```json
 {
-  "servers": [
-    {
-      "name": "notify",
+  "mcpServers": {
+    "notify": {
       "command": ["python", "-m", "mcp_server_notify"],
       "working_directory": "/path/to/notify-mcp",
       "enabled": true
     }
-  ]
+  }
 }
 ```
 
