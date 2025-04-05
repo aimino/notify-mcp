@@ -40,34 +40,22 @@ def send_windows_notification(title: str, message: str, urgency: str = "normal")
         return True
     
     try:
-        powershell_script = f"""
-        if (Get-Module -ListAvailable -Name BurntToast) {{
-            Import-Module BurntToast
-            New-BurntToastNotification -Text "{title}", "{message}" -Silent
-            exit 0
-        }}
+        title_escaped = title.replace("'", "''")
+        message_escaped = message.replace("'", "''")
         
-        Add-Type -AssemblyName System.Windows.Forms
-        Add-Type -AssemblyName System.Drawing
+        ps_script = f"Add-Type -AssemblyName PresentationFramework; [System.Windows.MessageBox]::Show('{message_escaped}', '{title_escaped}')"
         
-        $notify = New-Object System.Windows.Forms.NotifyIcon
-        $notify.Icon = [System.Drawing.SystemIcons]::Information
-        $notify.BalloonTipIcon = [System.Windows.Forms.ToolTipIcon]::Info
-        $notify.BalloonTipTitle = "{title}"
-        $notify.BalloonTipText = "{message}"
-        $notify.Visible = $true
+        result = subprocess.run(
+            ["powershell", "-Command", ps_script],
+            capture_output=True,
+            text=True,
+            check=False
+        )
         
-        $notify.ShowBalloonTip(5000)
-        Start-Sleep -Seconds 1
-        $notify.Dispose()
-        
-        if ($LASTEXITCODE -ne 0) {{
-            Add-Type -AssemblyName PresentationFramework
-            [System.Windows.MessageBox]::Show("{message}", "{title}")
-        }}
-        """
-        
-        subprocess.run(["powershell", "-ExecutionPolicy", "Bypass", "-Command", powershell_script], check=True)
+        if result.returncode != 0:
+            print(f"PowerShell error: {result.stderr}")
+            return False
+            
         return True
     except Exception as e:
         print(f"Error sending Windows notification: {str(e)}")
