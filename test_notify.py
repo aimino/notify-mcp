@@ -7,7 +7,7 @@ async def main():
     """Test the Windows notification MCP server."""
     print("Testing Windows Notification MCP Server")
     
-    async with stdio_client(["python", "-m", "mcp_server_notify"]) as client:
+    async with stdio_client("python -m mcp_server_notify") as client:
         tools = await client.get_tools()
         print("Available tools:")
         for tool in tools:
